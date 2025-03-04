@@ -1,0 +1,75 @@
+---
+title: "PracticeMidterm"
+author: "Aaman Gafur"
+date: "2025-03-03"
+output: html_document
+---
+
+
+
+```{r}
+library(forecast)
+library(TTR)
+library(fpp2)
+
+us_arr <- arrivals[, "US"]
+plot(us_arr)
+#In this time series plot, I am seeing that there is an increasing trend due to the fact that the line is gradually increasing.
+
+
+fivenum(us_arr)
+#Based on the five number summary we can see the following:
+# MINIMUM VALUE: 23.7210
+# MAXIMUM VALUE: 136.0940
+# MEDIAN VALUE: 85.8780
+# 1ST QUARTILE VALUE: 63.9505
+# 3RD QUARTILE VALUE: 108.9770
+boxplot(us_arr)
+#Looking at the time series, summary stats, and boxplots you can tell even more that the data is displaying a trend because the numbers are increasing 
+
+
+stl_decomp <- stl(us_arr, s.window = "periodic")
+plot(stl_decomp)
+#Based on the decomp, the time series seems seasonal based on the obvious ups and downs in the seasonal section of the plot.
+#The decomposition is multiplicative rather than additive
+seasonal_component <- stl_decomp$time.series[, "seasonal"]
+seasonal_indices <- tapply(seasonal_component, cycle(us_arr), mean)
+#Below are the seasonal indicies
+# You can see the highest value is 6.713605 and the lowest value is 4.732221 
+print(seasonal_indices)
+#The reason behind these values is because it is during the holiday season
+
+seasonallyadj <- seasadj(stl_decomp)
+plot(seasonallyadj)
+#Seasonality does have big fluctuations, as there are still remaining fluctuations.
+
+
+
+#Naive Model
+
+naive_forecast <- naive(us_arr, h=12)
+plot(naive_forecast)
+
+#The plot below indicates that the naive model shoes the trend but not the seasonal patterns
+plot(naive_forecast$residuals)
+
+#The histogram below shows that the naive model isnt a bad choice but not the best because of the right skewdness
+hist(naive_forecast$residuals)
+
+#Below is the plot for fitted values vs residuals
+plot(fitted(naive_forecast), residuals(naive_forecast))
+
+#Below is the plot for actual values vs residuals
+plot(us_arr, residuals(naive_forecast))
+
+#In this ACF we can see tha the spikes occur at regular intervals meaning there is some seasonality that the naive model did not take into account
+Acf(residuals(naive_forecast), main = "ACF of Residuals")
+
+# The five measures of accuracy for naive model
+accuracy(naive_forecast)
+
+
+#Below is the final forecast
+print(naive_forecast)
+
+```
